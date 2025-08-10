@@ -1,54 +1,37 @@
 import { useState } from 'react';
-import { useLocation } from 'wouter';
 import { ArrowLeft, Eye, EyeOff, Copy, Shield, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useWallet } from '@/hooks/use-wallet';
 import { BackgroundAnimation } from '@/components/ui/background-animation';
 
-export default function Settings() {
-  const [, setLocation] = useLocation();
+export default function SettingsMockup() {
   const [showSeedPhrase, setShowSeedPhrase] = useState(false);
-  const { wallet, clearWallet } = useWallet();
 
-  const handleBack = () => {
-    setLocation('/dashboard');
+  // Dummy placeholder data
+  const wallet = {
+    accounts: [
+      {
+        publicKey: '0x1234...abcd',
+        derivationPath: "m/44'/60'/0'/0/0"
+      },
+      {
+        publicKey: '0x5678...efgh',
+        derivationPath: "m/44'/60'/0'/0/1"
+      }
+    ],
+    mnemonic: 'word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12'
   };
-
-  const handleCopyAddress = (address: string) => {
-    navigator.clipboard.writeText(address);
-  };
-
-  const handleCopySeedPhrase = () => {
-    if (wallet.mnemonic) {
-      navigator.clipboard.writeText(wallet.mnemonic);
-    }
-  };
-
-  const handleLogout = () => {
-    if (confirm('Are you sure you want to log out? You will need your seed phrase to access your wallet again.')) {
-      clearWallet();
-      setLocation('/');
-    }
-  };
-
-  if (!wallet.isLoaded) {
-    setLocation('/');
-    return null;
-  }
 
   return (
     <div className="min-h-screen relative">
       <BackgroundAnimation />
-      
+
       {/* Header */}
       <header className="relative z-10 border-b border-white/10 bg-background/50 backdrop-blur-sm">
         <div className="max-w-4xl mx-auto px-6 py-4">
           <div className="flex items-center">
             <Button 
-              onClick={handleBack}
               variant="ghost" 
               className="mr-4 text-white hover:bg-white/10 p-2"
-              data-testid="button-back"
             >
               <ArrowLeft className="w-4 h-4" />
             </Button>
@@ -73,7 +56,7 @@ export default function Settings() {
               <div>
                 <label className="text-sm font-medium text-white mb-2 block">Accounts</label>
                 <p className="text-sm text-muted-foreground mb-3">
-                  {wallet.accounts.length} account{wallet.accounts.length !== 1 ? 's' : ''} created
+                  {wallet.accounts.length} account{wallet.accounts.length !== 1 ? 's' : ''}
                 </p>
                 
                 <div className="space-y-3">
@@ -82,11 +65,9 @@ export default function Settings() {
                       <div className="flex justify-between items-start mb-2">
                         <span className="text-sm font-medium text-white">Account {index + 1}</span>
                         <Button
-                          onClick={() => handleCopyAddress(account.publicKey)}
                           variant="ghost"
                           size="sm"
                           className="text-white hover:bg-white/10 p-1"
-                          data-testid={`button-copy-address-${index}`}
                         >
                           <Copy className="w-3 h-3" />
                         </Button>
@@ -123,16 +104,13 @@ export default function Settings() {
                       variant="ghost"
                       size="sm"
                       className="text-white hover:bg-white/10 p-2"
-                      data-testid="button-toggle-seed"
                     >
                       {showSeedPhrase ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </Button>
                     <Button
-                      onClick={handleCopySeedPhrase}
                       variant="ghost"
                       size="sm"
                       className="text-white hover:bg-white/10 p-2"
-                      data-testid="button-copy-seed"
                     >
                       <Copy className="w-4 h-4" />
                     </Button>
@@ -164,10 +142,8 @@ export default function Settings() {
             
             <div className="space-y-4">
               <Button 
-                onClick={handleLogout}
                 variant="outline"
                 className="w-full justify-center p-3 border-red-500/50 text-red-400 hover:bg-red-500/10 hover:border-red-500"
-                data-testid="button-logout"
               >
                 Log Out
               </Button>

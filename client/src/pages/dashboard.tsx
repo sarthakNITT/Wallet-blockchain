@@ -4,85 +4,25 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useWallet } from '@/hooks/use-wallet';
-import { useLocation } from 'wouter';
 import { BackgroundAnimation } from '@/components/ui/background-animation';
-import { SolanaWalletUtils } from '@/lib/solana-utils';
 
 export default function Dashboard() {
-  const [, setLocation] = useLocation();
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
   const [balanceAddress, setBalanceAddress] = useState('');
-  const [balanceResult, setBalanceResult] = useState<{ balance: number; lamports: number } | null>(null);
   const [tokenName, setTokenName] = useState('');
   const [tokenSymbol, setTokenSymbol] = useState('');
   const [tokenDecimals, setTokenDecimals] = useState('9');
-  const { wallet, createAccount, clearWallet } = useWallet();
 
-  const handleCreateAccount = () => {
-    createAccount();
-  };
-
-  const handleSettings = () => {
-    setLocation('/settings');
-  };
-
-  const handleLogout = () => {
-    clearWallet();
-    setLocation('/');
-  };
-
-  const handleCheckBalance = async () => {
-    if (!balanceAddress.trim()) return;
-    
-    try {
-      const result = await SolanaWalletUtils.checkBalance(balanceAddress);
-      setBalanceResult(result);
-    } catch (error) {
-      console.error('Failed to check balance:', error);
-    }
-  };
-
-  const handleCreateToken = async () => {
-    if (!tokenName.trim() || !tokenSymbol.trim()) return;
-    
-    try {
-      const mintAddress = await SolanaWalletUtils.buildCreateMintTransaction(
-        'https://api.devnet.solana.com',
-        wallet.accounts[0]?.publicKey || '',
-        wallet.accounts[0]?.publicKey || '',
-        null,
-        parseInt(tokenDecimals)
-      );
-      console.log('Token created with mint address:', mintAddress);
-      setShowTokenModal(false);
-      setTokenName('');
-      setTokenSymbol('');
-      setTokenDecimals('9');
-    } catch (error) {
-      console.error('Failed to create token:', error);
-    }
-  };
-
-  if (!wallet.isLoaded || wallet.accounts.length === 0) {
-    return (
-      <div className="min-h-screen relative flex items-center justify-center">
-        <BackgroundAnimation />
-        <div className="relative z-10 text-center">
-          <p className="text-white mb-4">No wallet loaded. Redirecting...</p>
-          <Button onClick={() => setLocation('/')} className="bg-white text-black hover:bg-white/90">
-            Go to Landing Page
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  const accounts = [
+    { accountIndex: 0, publicKey: 'DummyPublicKey1', derivationPath: 'm/44/501/0' },
+    { accountIndex: 1, publicKey: 'DummyPublicKey2', derivationPath: 'm/44/501/1' },
+  ];
 
   return (
     <div className="min-h-screen relative">
       <BackgroundAnimation />
-      
+
       {/* Header */}
       <header className="relative z-10 border-b border-white/10 bg-background/50 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-6 py-4">
@@ -94,22 +34,10 @@ export default function Dashboard() {
               <h1 className="text-lg font-medium text-white">CryptoVault</h1>
             </div>
             <div className="flex items-center gap-3">
-              <Button 
-                onClick={handleSettings}
-                variant="ghost" 
-                size="sm"
-                className="text-white hover:bg-white/10 p-2"
-                data-testid="button-settings"
-              >
+              <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 p-2">
                 <Settings className="w-4 h-4" />
               </Button>
-              <Button 
-                onClick={handleLogout}
-                variant="ghost" 
-                size="sm"
-                className="text-white hover:bg-white/10 p-2"
-                data-testid="button-logout"
-              >
+              <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 p-2">
                 <LogOut className="w-4 h-4" />
               </Button>
             </div>
@@ -124,32 +52,17 @@ export default function Dashboard() {
             <div className="card-glass p-6 sticky top-24">
               <h2 className="text-base font-medium text-white mb-6">Actions</h2>
               <div className="space-y-3">
-                <Button 
-                  onClick={handleCreateAccount}
-                  variant="ghost"
-                  className="w-full justify-start p-3 text-white hover:bg-white/10 border border-white/10 hover:border-white/20"
-                  data-testid="button-create-account"
-                >
+                <Button variant="ghost" className="w-full justify-start p-3 text-white hover:bg-white/10 border border-white/10 hover:border-white/20">
                   <Plus className="mr-3 w-4 h-4" />
                   Create Account
                 </Button>
-                
-                <Button 
-                  onClick={() => setShowTokenModal(true)}
-                  variant="ghost"
-                  className="w-full justify-start p-3 text-white hover:bg-white/10 border border-white/10 hover:border-white/20"
-                  data-testid="button-create-token"
-                >
+
+                <Button onClick={() => setShowTokenModal(true)} variant="ghost" className="w-full justify-start p-3 text-white hover:bg-white/10 border border-white/10 hover:border-white/20">
                   <Coins className="mr-3 w-4 h-4" />
                   Create Token
                 </Button>
-                
-                <Button 
-                  onClick={() => setShowBalanceModal(true)}
-                  variant="ghost"
-                  className="w-full justify-start p-3 text-white hover:bg-white/10 border border-white/10 hover:border-white/20"
-                  data-testid="button-check-balance"
-                >
+
+                <Button onClick={() => setShowBalanceModal(true)} variant="ghost" className="w-full justify-start p-3 text-white hover:bg-white/10 border border-white/10 hover:border-white/20">
                   <BarChart3 className="mr-3 w-4 h-4" />
                   Check Balance
                 </Button>
@@ -161,9 +74,9 @@ export default function Dashboard() {
           <div className="lg:col-span-3">
             <div className="mb-8">
               <h2 className="text-xl font-medium text-white mb-6">Accounts</h2>
-              
+
               <div className="grid gap-4">
-                {wallet.accounts.map((account, index) => (
+                {accounts.map((account, index) => (
                   <div key={index} className="card-glass p-6 hover-lift">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center">
@@ -180,7 +93,7 @@ export default function Dashboard() {
                         <p className="text-sm text-muted-foreground">${(Math.random() * 1000).toFixed(2)}</p>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <div>
                         <label className="text-xs text-muted-foreground">Public Key</label>
@@ -212,55 +125,21 @@ export default function Dashboard() {
           <div className="space-y-4">
             <div>
               <Label htmlFor="token-name" className="text-sm font-medium text-white">Token Name</Label>
-              <Input
-                id="token-name"
-                value={tokenName}
-                onChange={(e) => setTokenName(e.target.value)}
-                placeholder="My Token"
-                className="mt-1 bg-white/5 border-white/10 text-white placeholder-white/50"
-                data-testid="input-token-name"
-              />
+              <Input id="token-name" value={tokenName} onChange={(e) => setTokenName(e.target.value)} placeholder="My Token" className="mt-1 bg-white/5 border-white/10 text-white placeholder-white/50" />
             </div>
             <div>
               <Label htmlFor="token-symbol" className="text-sm font-medium text-white">Symbol</Label>
-              <Input
-                id="token-symbol"
-                value={tokenSymbol}
-                onChange={(e) => setTokenSymbol(e.target.value)}
-                placeholder="MTK"
-                className="mt-1 bg-white/5 border-white/10 text-white placeholder-white/50"
-                data-testid="input-token-symbol"
-              />
+              <Input id="token-symbol" value={tokenSymbol} onChange={(e) => setTokenSymbol(e.target.value)} placeholder="MTK" className="mt-1 bg-white/5 border-white/10 text-white placeholder-white/50" />
             </div>
             <div>
               <Label htmlFor="token-decimals" className="text-sm font-medium text-white">Decimals</Label>
-              <Input
-                id="token-decimals"
-                type="number"
-                value={tokenDecimals}
-                onChange={(e) => setTokenDecimals(e.target.value)}
-                min="0"
-                max="18"
-                className="mt-1 bg-white/5 border-white/10 text-white placeholder-white/50"
-                data-testid="input-token-decimals"
-              />
+              <Input id="token-decimals" type="number" value={tokenDecimals} onChange={(e) => setTokenDecimals(e.target.value)} min="0" max="18" className="mt-1 bg-white/5 border-white/10 text-white placeholder-white/50" />
             </div>
             <div className="flex justify-end gap-3 pt-4">
-              <Button 
-                variant="outline" 
-                onClick={() => setShowTokenModal(false)}
-                className="border-white/20 text-white hover:bg-white/5"
-              >
+              <Button variant="outline" onClick={() => setShowTokenModal(false)} className="border-white/20 text-white hover:bg-white/5">
                 Cancel
               </Button>
-              <Button 
-                onClick={handleCreateToken}
-                disabled={!tokenName.trim() || !tokenSymbol.trim()}
-                className="bg-white text-black hover:bg-white/90 disabled:opacity-50"
-                data-testid="button-confirm-create-token"
-              >
-                Create
-              </Button>
+              <Button className="bg-white text-black hover:bg-white/90">Create</Button>
             </div>
           </div>
         </DialogContent>
@@ -275,44 +154,14 @@ export default function Dashboard() {
           <div className="space-y-4">
             <div>
               <Label htmlFor="balance-address" className="text-sm font-medium text-white">Solana Address</Label>
-              <Input
-                id="balance-address"
-                value={balanceAddress}
-                onChange={(e) => setBalanceAddress(e.target.value)}
-                placeholder="Enter Solana address..."
-                className="mt-1 bg-white/5 border-white/10 text-white placeholder-white/50"
-                data-testid="input-balance-address"
-              />
+              <Input id="balance-address" value={balanceAddress} onChange={(e) => setBalanceAddress(e.target.value)} placeholder="Enter Solana address..." className="mt-1 bg-white/5 border-white/10 text-white placeholder-white/50" />
             </div>
-            
-            {balanceResult && (
-              <div className="p-4 bg-white/[0.02] border border-white/10 rounded-lg">
-                <h3 className="text-sm font-medium text-white mb-2">Balance</h3>
-                <p className="text-lg text-white">{balanceResult.balance.toFixed(4)} SOL</p>
-                <p className="text-sm text-muted-foreground">{balanceResult.lamports.toLocaleString()} lamports</p>
-              </div>
-            )}
-            
+
             <div className="flex justify-end gap-3 pt-4">
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setShowBalanceModal(false);
-                  setBalanceResult(null);
-                  setBalanceAddress('');
-                }}
-                className="border-white/20 text-white hover:bg-white/5"
-              >
+              <Button variant="outline" onClick={() => setShowBalanceModal(false)} className="border-white/20 text-white hover:bg-white/5">
                 Close
               </Button>
-              <Button 
-                onClick={handleCheckBalance}
-                disabled={!balanceAddress.trim()}
-                className="bg-white text-black hover:bg-white/90 disabled:opacity-50"
-                data-testid="button-confirm-check-balance"
-              >
-                Check
-              </Button>
+              <Button className="bg-white text-black hover:bg-white/90">Check</Button>
             </div>
           </div>
         </DialogContent>

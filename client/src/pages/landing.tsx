@@ -4,41 +4,38 @@ import { Wallet, Plus, FileText, BarChart3, Shield, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useWallet } from '@/hooks/use-wallet';
 import { BackgroundAnimation } from '@/components/ui/background-animation';
+import { createWallet } from '@/helperFunctions/createWallet';
+import { loadWallet } from '@/helperFunctions/loadWallet';
 
 export default function Landing() {
   const [, setLocation] = useLocation();
   const [seedPhrase, setSeedPhrase] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showLoadModal, setShowLoadModal] = useState(false);
-  const [createdWallet, setCreatedWallet] = useState<{ mnemonic: string; address: string } | null>(null);
-  const { createWallet, loadWallet } = useWallet();
+  const [createdWallet, setCreatedWallet] = useState<{ mnemonic: string; address: string; secret: string } | null>(null);
 
-  const handleLoadWallet = () => {
-    if (!seedPhrase.trim()) {
-      return;
-    }
-
+  async function handleCreateWallet () {
     try {
-      loadWallet(seedPhrase.trim());
-      setLocation('/dashboard');
-    } catch (error) {
-      console.error('Failed to load wallet:', error);
-    }
-  };
-
-  const handleCreateWallet = () => {
-    try {
-      const result = createWallet();
+      const result = await createWallet();
       setCreatedWallet({
         mnemonic: result.mnemonic,
-        address: result.account.publicKey
+        address: result.address,
+        secret: result.secret
       });
     } catch (error) {
       console.error('Failed to create wallet:', error);
     }
-  };
+  }
+
+  function handleLoadWallet () {
+    try {
+      loadWallet(seedPhrase);
+      setLocation('/dashboard');
+    } catch (error) {
+      console.error('Failed to load wallet:', error);
+    }
+  }
 
   const handleCopyText = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -53,7 +50,7 @@ export default function Landing() {
   return (
     <div className="min-h-screen relative">
       <BackgroundAnimation />
-      
+
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-6 py-12">
         {/* Hero Section */}
         <div className="text-center max-w-3xl mx-auto mb-16">
@@ -62,30 +59,28 @@ export default function Landing() {
               <Wallet className="w-7 h-7 text-white" />
             </div>
           </div>
-          
+
           <h1 className="text-5xl font-light mb-6 tracking-tight text-white">
             CryptoVault
           </h1>
-          
+
           <p className="text-lg text-muted-foreground mb-12 leading-relaxed font-light">
             A minimal Solana wallet for creating accounts, managing tokens, and monitoring balances with enterprise-grade security.
           </p>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button 
+            <Button
               onClick={() => setShowCreateModal(true)}
               className="bg-white text-black hover:bg-white/90 font-medium px-6 py-2.5 rounded-md transition-all duration-200"
-              data-testid="button-create-wallet"
             >
               <Plus className="mr-2 h-4 w-4" />
               Create Wallet
             </Button>
-            
-            <Button 
-              variant="outline" 
+
+            <Button
+              variant="outline"
               onClick={() => setShowLoadModal(true)}
               className="border-white/20 text-white hover:bg-white/5 hover:border-white/30 px-6 py-2.5 rounded-md transition-all duration-200"
-              data-testid="button-load-wallet"
             >
               <FileText className="mr-2 h-4 w-4" />
               Import Wallet
@@ -153,89 +148,106 @@ export default function Landing() {
               {createdWallet ? 'Wallet Created Successfully!' : 'Create New Wallet'}
             </DialogTitle>
           </DialogHeader>
-          
           {!createdWallet ? (
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                A new wallet will be created with a unique seed phrase. Make sure to save it securely.
-              </p>
-              <div className="flex justify-end gap-3">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowCreateModal(false)}
-                  className="border-white/20 text-white hover:bg-white/5"
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleCreateWallet}
-                  className="bg-white text-black hover:bg-white/90"
-                  data-testid="button-confirm-create"
-                >
-                  Create
-                </Button>
-              </div>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              A new wallet will be created with a unique seed phrase. Make sure to save it securely.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowCreateModal(false)}
+                className="border-white/20 text-white hover:bg-white/5"
+              >
+                Cancel
+              </Button>
+              <Button 
+                className="bg-white text-black hover:bg-white/90"
+                onClick={handleCreateWallet}
+              >
+                Create
+              </Button>
             </div>
-          ) : (
-            <div className="space-y-6">
-              <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
-                <p className="text-sm text-green-400 font-medium mb-2">⚠️ Save this information securely!</p>
-                <p className="text-xs text-muted-foreground">
-                  You'll need the seed phrase to import your wallet later. Store it safely and never share it.
-                </p>
-              </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="text-sm font-medium text-white">Wallet Address</label>
-                    <Button
-                      onClick={() => handleCopyText(createdWallet.address)}
-                      variant="ghost"
-                      size="sm"
-                      className="text-white hover:bg-white/10 p-1"
-                    >
-                      <Copy className="w-3 h-3" />
-                    </Button>
+          </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                  <p className="text-sm text-green-400 font-medium mb-2">⚠️ Save this information securely!</p>
+                  <p className="text-xs text-muted-foreground">
+                    You'll need the seed phrase to import your wallet later. Store it safely and never share it.
+                  </p>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="text-sm font-medium text-white">Wallet Address</label>
+                      <Button
+                        onClick={() => handleCopyText(createdWallet.address)}
+                        variant="ghost"
+                        size="sm"
+                        className="text-white hover:bg-white/10 p-1"
+                      >
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                    </div>
+                    <div className="bg-white/[0.02] border border-white/10 rounded-lg p-3">
+                      <p className="text-sm font-mono text-white break-all">
+                        {createdWallet.address}
+                      </p>
+                    </div>
                   </div>
-                  <div className="bg-white/[0.02] border border-white/10 rounded-lg p-3">
-                    <p className="text-sm font-mono text-white break-all">
-                      {createdWallet.address}
-                    </p>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="text-sm font-medium text-white">Secret <span className='text-red-500'> (do not share it with anyone)</span></label>
+                      <Button
+                        onClick={() => handleCopyText(createdWallet.secret)}
+                        variant="ghost"
+                        size="sm"
+                        className="text-white hover:bg-white/10 p-1"
+                      >
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                    </div>
+                    <div className="bg-white/[0.02] border border-white/10 rounded-lg p-3">
+                      <p className="text-sm font-mono text-white break-all">
+                        {createdWallet.secret}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="text-sm font-medium text-white">Seed Phrase (12 words)</label>
+                      <Button
+                        onClick={() => handleCopyText(createdWallet.mnemonic)}
+                        variant="ghost"
+                        size="sm"
+                        className="text-white hover:bg-white/10 p-1"
+                      >
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                    </div>
+                    <div className="bg-white/[0.02] border border-white/10 rounded-lg p-3">
+                      <p className="text-sm font-mono text-white break-all">
+                        {createdWallet.mnemonic}
+                      </p>
+                    </div>
                   </div>
                 </div>
                 
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="text-sm font-medium text-white">Seed Phrase (12 words)</label>
-                    <Button
-                      onClick={() => handleCopyText(createdWallet.mnemonic)}
-                      variant="ghost"
-                      size="sm"
-                      className="text-white hover:bg-white/10 p-1"
-                    >
-                      <Copy className="w-3 h-3" />
-                    </Button>
-                  </div>
-                  <div className="bg-white/[0.02] border border-white/10 rounded-lg p-3">
-                    <p className="text-sm font-mono text-white break-all">
-                      {createdWallet.mnemonic}
-                    </p>
-                  </div>
+                <div className="flex justify-end">
+                  <Button 
+                    onClick={handleContinueToDashboard}
+                    className="bg-white text-black hover:bg-white/90"
+                    data-testid="button-continue-dashboard"
+                  >
+                    Continue to Dashboard
+                  </Button>
                 </div>
               </div>
-              
-              <div className="flex justify-end">
-                <Button 
-                  onClick={handleContinueToDashboard}
-                  className="bg-white text-black hover:bg-white/90"
-                  data-testid="button-continue-dashboard"
-                >
-                  Continue to Dashboard
-                </Button>
-              </div>
-            </div>
-          )}
+            )}
         </DialogContent>
       </Dialog>
 
@@ -254,22 +266,20 @@ export default function Landing() {
                 value={seedPhrase}
                 onChange={(e) => setSeedPhrase(e.target.value)}
                 className="mt-2 bg-white/5 border-white/10 text-white placeholder-white/50"
-                data-testid="input-seed-phrase"
               />
             </div>
             <div className="flex justify-end gap-3">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setShowLoadModal(false)}
                 className="border-white/20 text-white hover:bg-white/5"
               >
                 Cancel
               </Button>
-              <Button 
-                onClick={handleLoadWallet}
+              <Button
                 disabled={!seedPhrase.trim()}
                 className="bg-white text-black hover:bg-white/90 disabled:opacity-50"
-                data-testid="button-confirm-load"
+                onClick={handleLoadWallet}
               >
                 Import
               </Button>
