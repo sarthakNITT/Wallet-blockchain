@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { SolanaWalletUtils, type WalletAccount } from '@/lib/solana-utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -9,14 +9,36 @@ interface WalletState {
   isLoaded: boolean;
 }
 
+const WALLET_STORAGE_KEY = 'cryptovault_wallet';
+
 export function useWallet() {
-  const [wallet, setWallet] = useState<WalletState>({
-    mnemonic: null,
-    accounts: [],
-    currentAccountIndex: 0,
-    isLoaded: false,
+  const [wallet, setWallet] = useState<WalletState>(() => {
+    // Load wallet from localStorage on initialization
+    try {
+      const stored = localStorage.getItem(WALLET_STORAGE_KEY);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (error) {
+      console.error('Failed to load wallet from storage:', error);
+    }
+    return {
+      mnemonic: null,
+      accounts: [],
+      currentAccountIndex: 0,
+      isLoaded: false,
+    };
   });
   const { toast } = useToast();
+
+  // Save wallet to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(WALLET_STORAGE_KEY, JSON.stringify(wallet));
+    } catch (error) {
+      console.error('Failed to save wallet to storage:', error);
+    }
+  }, [wallet]);
 
   const createWallet = useCallback(() => {
     try {
@@ -135,12 +157,21 @@ export function useWallet() {
   }, [toast]);
 
   const clearWallet = useCallback(() => {
-    setWallet({
+    const clearedState = {
       isLoaded: false,
       mnemonic: null,
       accounts: [],
       currentAccountIndex: 0,
-    });
+    };
+    
+    setWallet(clearedState);
+    
+    // Clear from localStorage
+    try {
+      localStorage.removeItem(WALLET_STORAGE_KEY);
+    } catch (error) {
+      console.error('Failed to clear wallet from storage:', error);
+    }
     
     toast({
       title: "Wallet Cleared",
