@@ -134,6 +134,20 @@ export function useWallet() {
     }
   }, [toast]);
 
+  const clearWallet = useCallback(() => {
+    setWallet({
+      isLoaded: false,
+      mnemonic: null,
+      accounts: [],
+      currentAccountIndex: 0,
+    });
+    
+    toast({
+      title: "Wallet Cleared",
+      description: "Successfully logged out of wallet.",
+    });
+  }, [toast]);
+
   return {
     wallet,
     createWallet,
@@ -142,5 +156,6 @@ export function useWallet() {
     getCurrentAccount,
     setCurrentAccount,
     copyToClipboard,
+    clearWallet,
   };
 }

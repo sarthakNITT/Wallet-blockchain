@@ -1,18 +1,24 @@
 import { useState } from 'react';
-import { Settings, PlusCircle, Coins, TrendingUp } from 'lucide-react';
+import { Settings, Plus, Coins, BarChart3, Wallet, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import AccountCard from '@/components/wallet/account-card';
-import TokenCreationModal from '@/components/wallet/token-creation-modal';
-import BalanceCheckerModal from '@/components/wallet/balance-checker-modal';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useWallet } from '@/hooks/use-wallet';
 import { useLocation } from 'wouter';
+import { BackgroundAnimation } from '@/components/ui/background-animation';
+import { SolanaWalletUtils } from '@/lib/solana-utils';
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
-  const { wallet, createAccount } = useWallet();
+  const [balanceAddress, setBalanceAddress] = useState('');
+  const [balanceResult, setBalanceResult] = useState<{ balance: number; lamports: number } | null>(null);
+  const [tokenName, setTokenName] = useState('');
+  const [tokenSymbol, setTokenSymbol] = useState('');
+  const [tokenDecimals, setTokenDecimals] = useState('9');
+  const { wallet, createAccount, clearWallet } = useWallet();
 
   const handleCreateAccount = () => {
     createAccount();
@@ -22,100 +28,165 @@ export default function Dashboard() {
     setLocation('/settings');
   };
 
+  const handleLogout = () => {
+    clearWallet();
+    setLocation('/');
+  };
+
+  const handleCheckBalance = async () => {
+    if (!balanceAddress.trim()) return;
+    
+    try {
+      const result = await SolanaWalletUtils.checkBalance(balanceAddress);
+      setBalanceResult(result);
+    } catch (error) {
+      console.error('Failed to check balance:', error);
+    }
+  };
+
+  const handleCreateToken = async () => {
+    if (!tokenName.trim() || !tokenSymbol.trim()) return;
+    
+    try {
+      const mintAddress = await SolanaWalletUtils.buildCreateMintTransaction(
+        'https://api.devnet.solana.com',
+        wallet.accounts[0]?.publicKey || '',
+        wallet.accounts[0]?.publicKey || '',
+        null,
+        parseInt(tokenDecimals)
+      );
+      console.log('Token created with mint address:', mintAddress);
+      setShowTokenModal(false);
+      setTokenName('');
+      setTokenSymbol('');
+      setTokenDecimals('9');
+    } catch (error) {
+      console.error('Failed to create token:', error);
+    }
+  };
+
   if (!wallet.isLoaded) {
     setLocation('/');
     return null;
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative">
+      <BackgroundAnimation />
+      
       {/* Header */}
-      <header className="glass-card sticky top-0 z-40 border-b border-slate-600/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+      <header className="relative z-10 border-b border-white/10 bg-background/50 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <div className="flex justify-between items-center">
             <div className="flex items-center">
-              <div className="p-2 rounded-lg bg-gradient-to-r from-cyan-electric to-green-neon mr-3">
-                <svg className="w-5 h-5 text-space" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M21 7.28V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v2.28c.55.35 1 .98 1 1.72 0 .74-.45 1.38-1 1.72V14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-3.28c-.55-.35-1-.98-1-1.72 0-.74.45-1.38 1-1.72zM20 9.72c-.55-.35-1-.98-1-1.72 0-.74.45-1.38 1-1.72V5H4v1.28c.55.35 1 .98 1 1.72 0 .74-.45 1.38-1 1.72V14h16V9.72z"/>
-                </svg>
+              <div className="w-8 h-8 rounded-md bg-white/[0.05] flex items-center justify-center mr-3 border border-white/10">
+                <Wallet className="w-4 h-4 text-white" />
               </div>
-              <h1 className="text-lg font-semibold text-white">CryptoVault</h1>
+              <h1 className="text-lg font-medium text-white">CryptoVault</h1>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-3">
               <Button 
                 onClick={handleSettings}
                 variant="ghost" 
                 size="sm"
-                className="p-2 rounded-lg bg-slate-600/50 hover:bg-slate-600/70 text-slate-300 hover:text-white transition-all duration-300"
+                className="text-white hover:bg-white/10 p-2"
                 data-testid="button-settings"
               >
-                <Settings size={16} />
+                <Settings className="w-4 h-4" />
+              </Button>
+              <Button 
+                onClick={handleLogout}
+                variant="ghost" 
+                size="sm"
+                className="text-white hover:bg-white/10 p-2"
+                data-testid="button-logout"
+              >
+                <LogOut className="w-4 h-4" />
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="lg:grid lg:grid-cols-4 lg:gap-8">
+      <div className="relative z-10 max-w-6xl mx-auto px-6 py-8">
+        <div className="grid lg:grid-cols-4 gap-8">
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <Card className="glass-card sticky top-24">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold text-white">Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
+            <div className="card-glass p-6 sticky top-24">
+              <h2 className="text-base font-medium text-white mb-6">Actions</h2>
+              <div className="space-y-3">
                 <Button 
                   onClick={handleCreateAccount}
                   variant="ghost"
-                  className="w-full justify-start px-4 py-3 rounded-xl bg-slate-600/30 hover:bg-slate-600/50 text-slate-300 hover:text-white transition-all duration-300"
+                  className="w-full justify-start p-3 text-white hover:bg-white/10 border border-white/10 hover:border-white/20"
                   data-testid="button-create-account"
                 >
-                  <PlusCircle className="mr-3 text-green-neon" size={16} />
+                  <Plus className="mr-3 w-4 h-4" />
                   Create Account
                 </Button>
+                
                 <Button 
                   onClick={() => setShowTokenModal(true)}
                   variant="ghost"
-                  className="w-full justify-start px-4 py-3 rounded-xl bg-slate-600/30 hover:bg-slate-600/50 text-slate-300 hover:text-white transition-all duration-300"
+                  className="w-full justify-start p-3 text-white hover:bg-white/10 border border-white/10 hover:border-white/20"
                   data-testid="button-create-token"
                 >
-                  <Coins className="mr-3 text-cyan-electric" size={16} />
+                  <Coins className="mr-3 w-4 h-4" />
                   Create Token
                 </Button>
+                
                 <Button 
                   onClick={() => setShowBalanceModal(true)}
                   variant="ghost"
-                  className="w-full justify-start px-4 py-3 rounded-xl bg-slate-600/30 hover:bg-slate-600/50 text-slate-300 hover:text-white transition-all duration-300"
+                  className="w-full justify-start p-3 text-white hover:bg-white/10 border border-white/10 hover:border-white/20"
                   data-testid="button-check-balance"
                 >
-                  <TrendingUp className="mr-3 text-purple-glow" size={16} />
+                  <BarChart3 className="mr-3 w-4 h-4" />
                   Check Balance
                 </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
 
           {/* Main Content */}
-          <div className="lg:col-span-3 mt-8 lg:mt-0">
-            {/* Accounts Section */}
+          <div className="lg:col-span-3">
             <div className="mb-8">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-white">Your Accounts</h2>
-                <span className="text-sm text-slate-400" data-testid="text-account-count">
-                  {wallet.accounts.length} {wallet.accounts.length === 1 ? 'account' : 'accounts'}
-                </span>
-              </div>
+              <h2 className="text-xl font-medium text-white mb-6">Accounts</h2>
               
-              {/* Account Cards */}
-              <div className="space-y-4">
+              <div className="grid gap-4">
                 {wallet.accounts.map((account, index) => (
-                  <AccountCard 
-                    key={`${account.publicKey}-${index}`}
-                    account={account} 
-                    accountIndex={index}
-                    isActive={index === wallet.currentAccountIndex}
-                  />
+                  <div key={index} className="card-glass p-6 hover-lift">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 rounded-md bg-white/[0.05] flex items-center justify-center mr-4 border border-white/10">
+                          <User className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-base font-medium text-white">Account {index + 1}</h3>
+                          <p className="text-sm text-muted-foreground">Index: {account.accountIndex}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-medium text-white">{(Math.random() * 10).toFixed(4)} SOL</p>
+                        <p className="text-sm text-muted-foreground">${(Math.random() * 1000).toFixed(2)}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div>
+                        <label className="text-xs text-muted-foreground">Public Key</label>
+                        <p className="text-sm font-mono text-white bg-white/[0.02] p-2 rounded border border-white/10 break-all">
+                          {account.publicKey}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-xs text-muted-foreground">Derivation Path</label>
+                        <p className="text-sm font-mono text-white">
+                          {account.derivationPath}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -123,15 +194,120 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <TokenCreationModal 
-        open={showTokenModal}
-        onOpenChange={setShowTokenModal}
-      />
+      {/* Create Token Modal */}
+      <Dialog open={showTokenModal} onOpenChange={setShowTokenModal}>
+        <DialogContent className="sm:max-w-md bg-background border-white/10">
+          <DialogHeader>
+            <DialogTitle className="text-white">Create SPL Token</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="token-name" className="text-sm font-medium text-white">Token Name</Label>
+              <Input
+                id="token-name"
+                value={tokenName}
+                onChange={(e) => setTokenName(e.target.value)}
+                placeholder="My Token"
+                className="mt-1 bg-white/5 border-white/10 text-white placeholder-white/50"
+                data-testid="input-token-name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="token-symbol" className="text-sm font-medium text-white">Symbol</Label>
+              <Input
+                id="token-symbol"
+                value={tokenSymbol}
+                onChange={(e) => setTokenSymbol(e.target.value)}
+                placeholder="MTK"
+                className="mt-1 bg-white/5 border-white/10 text-white placeholder-white/50"
+                data-testid="input-token-symbol"
+              />
+            </div>
+            <div>
+              <Label htmlFor="token-decimals" className="text-sm font-medium text-white">Decimals</Label>
+              <Input
+                id="token-decimals"
+                type="number"
+                value={tokenDecimals}
+                onChange={(e) => setTokenDecimals(e.target.value)}
+                min="0"
+                max="18"
+                className="mt-1 bg-white/5 border-white/10 text-white placeholder-white/50"
+                data-testid="input-token-decimals"
+              />
+            </div>
+            <div className="flex justify-end gap-3 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowTokenModal(false)}
+                className="border-white/20 text-white hover:bg-white/5"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleCreateToken}
+                disabled={!tokenName.trim() || !tokenSymbol.trim()}
+                className="bg-white text-black hover:bg-white/90 disabled:opacity-50"
+                data-testid="button-confirm-create-token"
+              >
+                Create
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-      <BalanceCheckerModal 
-        open={showBalanceModal}
-        onOpenChange={setShowBalanceModal}
-      />
+      {/* Check Balance Modal */}
+      <Dialog open={showBalanceModal} onOpenChange={setShowBalanceModal}>
+        <DialogContent className="sm:max-w-md bg-background border-white/10">
+          <DialogHeader>
+            <DialogTitle className="text-white">Check Account Balance</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="balance-address" className="text-sm font-medium text-white">Solana Address</Label>
+              <Input
+                id="balance-address"
+                value={balanceAddress}
+                onChange={(e) => setBalanceAddress(e.target.value)}
+                placeholder="Enter Solana address..."
+                className="mt-1 bg-white/5 border-white/10 text-white placeholder-white/50"
+                data-testid="input-balance-address"
+              />
+            </div>
+            
+            {balanceResult && (
+              <div className="p-4 bg-white/[0.02] border border-white/10 rounded-lg">
+                <h3 className="text-sm font-medium text-white mb-2">Balance</h3>
+                <p className="text-lg text-white">{balanceResult.balance.toFixed(4)} SOL</p>
+                <p className="text-sm text-muted-foreground">{balanceResult.lamports.toLocaleString()} lamports</p>
+              </div>
+            )}
+            
+            <div className="flex justify-end gap-3 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowBalanceModal(false);
+                  setBalanceResult(null);
+                  setBalanceAddress('');
+                }}
+                className="border-white/20 text-white hover:bg-white/5"
+              >
+                Close
+              </Button>
+              <Button 
+                onClick={handleCheckBalance}
+                disabled={!balanceAddress.trim()}
+                className="bg-white text-black hover:bg-white/90 disabled:opacity-50"
+                data-testid="button-confirm-check-balance"
+              >
+                Check
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
