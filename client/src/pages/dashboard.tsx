@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { BackgroundAnimation } from '@/components/ui/background-animation';
+import { useLocation } from 'wouter';
 
 export default function Dashboard() {
   const [showTokenModal, setShowTokenModal] = useState(false);
@@ -13,11 +14,20 @@ export default function Dashboard() {
   const [tokenName, setTokenName] = useState('');
   const [tokenSymbol, setTokenSymbol] = useState('');
   const [tokenDecimals, setTokenDecimals] = useState('9');
+  const [, setLocation] = useLocation();
 
   const accounts = [
     { accountIndex: 0, publicKey: 'DummyPublicKey1', derivationPath: 'm/44/501/0' },
     { accountIndex: 1, publicKey: 'DummyPublicKey2', derivationPath: 'm/44/501/1' },
   ];
+
+  const handleSettings = () => {
+    setLocation('/settings');
+  };
+
+  const handleLogout = () => {
+    setLocation('/');
+  };
 
   return (
     <div className="min-h-screen relative">
@@ -34,10 +44,10 @@ export default function Dashboard() {
               <h1 className="text-lg font-medium text-white">CryptoVault</h1>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 p-2">
+              <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 p-2" onClick={handleSettings}>
                 <Settings className="w-4 h-4" />
               </Button>
-              <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 p-2">
+              <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 p-2" onClick={handleLogout}>
                 <LogOut className="w-4 h-4" />
               </Button>
             </div>
