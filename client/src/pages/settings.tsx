@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { ArrowLeft, Eye, EyeOff, Copy, Shield, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BackgroundAnimation } from '@/components/ui/background-animation';
+import { useLocation } from 'wouter';
 
 export default function SettingsMockup() {
   const [showSeedPhrase, setShowSeedPhrase] = useState(false);
+  const [, setLocation] = useLocation();
 
   // Dummy placeholder data
   const wallet = {
@@ -21,6 +23,10 @@ export default function SettingsMockup() {
     mnemonic: 'word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12'
   };
 
+  const handleBack = () => {
+    setLocation('/dashboard');
+  };
+
   return (
     <div className="min-h-screen relative">
       <BackgroundAnimation />
@@ -32,6 +38,7 @@ export default function SettingsMockup() {
             <Button 
               variant="ghost" 
               className="mr-4 text-white hover:bg-white/10 p-2"
+              onClick={handleBack}
             >
               <ArrowLeft className="w-4 h-4" />
             </Button>
