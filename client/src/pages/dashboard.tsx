@@ -65,9 +65,18 @@ export default function Dashboard() {
     }
   };
 
-  if (!wallet.isLoaded) {
-    setLocation('/');
-    return null;
+  if (!wallet.isLoaded || wallet.accounts.length === 0) {
+    return (
+      <div className="min-h-screen relative flex items-center justify-center">
+        <BackgroundAnimation />
+        <div className="relative z-10 text-center">
+          <p className="text-white mb-4">No wallet loaded. Redirecting...</p>
+          <Button onClick={() => setLocation('/')} className="bg-white text-black hover:bg-white/90">
+            Go to Landing Page
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
