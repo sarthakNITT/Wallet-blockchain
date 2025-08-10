@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
-import { Wallet, Plus, FileText, BarChart3, Shield } from 'lucide-react';
+import { Wallet, Plus, FileText, BarChart3, Shield, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -12,6 +12,7 @@ export default function Landing() {
   const [seedPhrase, setSeedPhrase] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showLoadModal, setShowLoadModal] = useState(false);
+  const [createdWallet, setCreatedWallet] = useState<{ mnemonic: string; address: string } | null>(null);
   const { createWallet, loadWallet } = useWallet();
 
   const handleLoadWallet = () => {
@@ -29,12 +30,24 @@ export default function Landing() {
 
   const handleCreateWallet = () => {
     try {
-      createWallet();
-      setShowCreateModal(false);
-      setLocation('/dashboard');
+      const result = createWallet();
+      setCreatedWallet({
+        mnemonic: result.mnemonic,
+        address: result.account.publicKey
+      });
     } catch (error) {
       console.error('Failed to create wallet:', error);
     }
+  };
+
+  const handleCopyText = (text: string) => {
+    navigator.clipboard.writeText(text);
+  };
+
+  const handleContinueToDashboard = () => {
+    setShowCreateModal(false);
+    setCreatedWallet(null);
+    setLocation('/dashboard');
   };
 
   return (
@@ -134,31 +147,95 @@ export default function Landing() {
 
       {/* Create Wallet Modal */}
       <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-        <DialogContent className="sm:max-w-md bg-background border-white/10">
+        <DialogContent className="sm:max-w-lg bg-background border-white/10">
           <DialogHeader>
-            <DialogTitle className="text-white">Create New Wallet</DialogTitle>
+            <DialogTitle className="text-white">
+              {createdWallet ? 'Wallet Created Successfully!' : 'Create New Wallet'}
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              A new wallet will be created with a unique seed phrase. Make sure to save it securely.
-            </p>
-            <div className="flex justify-end gap-3">
-              <Button 
-                variant="outline" 
-                onClick={() => setShowCreateModal(false)}
-                className="border-white/20 text-white hover:bg-white/5"
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleCreateWallet}
-                className="bg-white text-black hover:bg-white/90"
-                data-testid="button-confirm-create"
-              >
-                Create
-              </Button>
+          
+          {!createdWallet ? (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                A new wallet will be created with a unique seed phrase. Make sure to save it securely.
+              </p>
+              <div className="flex justify-end gap-3">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowCreateModal(false)}
+                  className="border-white/20 text-white hover:bg-white/5"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleCreateWallet}
+                  className="bg-white text-black hover:bg-white/90"
+                  data-testid="button-confirm-create"
+                >
+                  Create
+                </Button>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                <p className="text-sm text-green-400 font-medium mb-2">⚠️ Save this information securely!</p>
+                <p className="text-xs text-muted-foreground">
+                  You'll need the seed phrase to import your wallet later. Store it safely and never share it.
+                </p>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-sm font-medium text-white">Wallet Address</label>
+                    <Button
+                      onClick={() => handleCopyText(createdWallet.address)}
+                      variant="ghost"
+                      size="sm"
+                      className="text-white hover:bg-white/10 p-1"
+                    >
+                      <Copy className="w-3 h-3" />
+                    </Button>
+                  </div>
+                  <div className="bg-white/[0.02] border border-white/10 rounded-lg p-3">
+                    <p className="text-sm font-mono text-white break-all">
+                      {createdWallet.address}
+                    </p>
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-sm font-medium text-white">Seed Phrase (12 words)</label>
+                    <Button
+                      onClick={() => handleCopyText(createdWallet.mnemonic)}
+                      variant="ghost"
+                      size="sm"
+                      className="text-white hover:bg-white/10 p-1"
+                    >
+                      <Copy className="w-3 h-3" />
+                    </Button>
+                  </div>
+                  <div className="bg-white/[0.02] border border-white/10 rounded-lg p-3">
+                    <p className="text-sm font-mono text-white break-all">
+                      {createdWallet.mnemonic}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-end">
+                <Button 
+                  onClick={handleContinueToDashboard}
+                  className="bg-white text-black hover:bg-white/90"
+                  data-testid="button-continue-dashboard"
+                >
+                  Continue to Dashboard
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
