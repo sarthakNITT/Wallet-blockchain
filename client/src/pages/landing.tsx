@@ -58,7 +58,7 @@ export default function Landing() {
   const handleContinueToDashboard = (mnemonic: string) => {
     setShowCreateModal(false);
     setCreatedWallet(null);
-    loadWallet(mnemonic, account)
+    setWalletAccount(loadWallet(mnemonic, account));
     setLocation('/dashboard');
   };
 

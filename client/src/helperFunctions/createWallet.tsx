@@ -19,6 +19,6 @@ export async function createWallet () {
     console.log(words);
     console.log(publicSave);
     console.log(secret);
-    setAccount(account+1);
+    setAccount(1);
     return {mnemonic: words, address: publicSave, secret: Buffer.from(secret).toString('hex')};
 }
