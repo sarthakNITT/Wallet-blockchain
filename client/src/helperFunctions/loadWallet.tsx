@@ -2,13 +2,16 @@ import { mnemonicToSeedSync } from "bip39"
 import { derivePath } from "ed25519-hd-key"
 import nacl from "tweetnacl"
 import { Keypair } from "@solana/web3.js"
+import { WalletStore } from "@/store";
 
 type Acc = {
   publicKey: string;
   derivationPath: string;
+  balance: string;
 };
 
 export const loadWallet = (mnemonics: any, account: number): Acc[] => {
+  const balanceAmount = WalletStore.getState().balance;
   const seed = mnemonicToSeedSync(mnemonics)
   const accounts: Acc[] = [];
   let i = 0;
@@ -20,7 +23,7 @@ export const loadWallet = (mnemonics: any, account: number): Acc[] => {
     console.log(mnemonics);
     console.log(publicSave);
     i = i+1;
-    accounts.push({ publicKey: publicSave, derivationPath: path });
+    accounts.push({ publicKey: publicSave, derivationPath: path, balance: balanceAmount });
   }
   return accounts;
 }

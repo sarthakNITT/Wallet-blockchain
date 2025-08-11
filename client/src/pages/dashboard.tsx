@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { BackgroundAnimation } from '@/components/ui/background-animation';
 import { useLocation } from 'wouter';
 import { WalletStore } from '@/store';
+import { showBalance } from '@/helperFunctions/showBalance';
 
 export default function Dashboard() {
   const [showTokenModal, setShowTokenModal] = useState(false);
@@ -29,6 +30,14 @@ export default function Dashboard() {
   const handleCreateAccount = () => {
       
   } 
+
+  useEffect(() => {
+    accounts.forEach((acc) => {
+      if (acc.publicKey) {
+        showBalance(acc.publicKey);
+      }
+    });
+  }, []);  
 
   return (
     <div className="min-h-screen relative">
@@ -100,8 +109,8 @@ export default function Dashboard() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-lg font-medium text-white">{(Math.random() * 10).toFixed(4)} SOL</p>
-                        <p className="text-sm text-muted-foreground">${(Math.random() * 1000).toFixed(2)}</p>
+                        <p className="text-lg font-medium text-white">{account.balance / 1e9} SOL</p>
+                        <p className="text-sm text-muted-foreground">${(account.balance / 1e9) * 177.03}</p>
                       </div>
                     </div>
 

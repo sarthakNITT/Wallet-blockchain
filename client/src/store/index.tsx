@@ -12,7 +12,8 @@ type State = {
     count: number,
     walletAccount: Acc[],
     createdWallet: { mnemonic: string; address: string; secret: string } | null,
-    seedPhrase: string
+    seedPhrase: string,
+    balance: string
 }
 type Action = {
     setUserPublicKey: (key: string) => void;
@@ -21,6 +22,7 @@ type Action = {
     setWalletAccount: (WalletAccount: Acc[]) => void;
     setCreatedWallet: (createdWallet: { mnemonic: string; address: string; secret: string } | null) => void;
     setSeedPhrase: (seedPhrase: string) => void;
+    setBalance: (balance: string) => void;
 }
 
 export const WalletStore = create<State & Action>((set)=>({
@@ -30,10 +32,12 @@ export const WalletStore = create<State & Action>((set)=>({
     walletAccount: [],
     createdWallet: null,
     seedPhrase: "",
+    balance: "0.00000",
     setUserPublicKey: (userPublicKey)=>set(()=>({userPublicKey: userPublicKey})),
     setAccount: (account) => set(() => ({ account: account })),
     setCount: (count) => set(() => ({ count: count })),
     setWalletAccount: (walletAccount) => set(() => ({ walletAccount: walletAccount})),
     setCreatedWallet: (createdWallet) => set(() => ({ createdWallet: createdWallet })),
     setSeedPhrase: (seedPhrase) => set(() => ({ seedPhrase: seedPhrase })),
+    setBalance: (balance) => set(() => ({ balance: balance })),
 }))
