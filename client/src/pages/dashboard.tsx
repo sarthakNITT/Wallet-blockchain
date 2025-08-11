@@ -26,6 +26,10 @@ export default function Dashboard() {
     setLocation('/');
   };
 
+  const handleCreateAccount = () => {
+      
+  } 
+
   return (
     <div className="min-h-screen relative">
       <BackgroundAnimation />
@@ -59,7 +63,7 @@ export default function Dashboard() {
             <div className="card-glass p-6 sticky top-24">
               <h2 className="text-base font-medium text-white mb-6">Actions</h2>
               <div className="space-y-3">
-                <Button variant="ghost" className="w-full justify-start p-3 text-white hover:bg-white/10 border border-white/10 hover:border-white/20" >
+                <Button variant="ghost" className="w-full justify-start p-3 text-white hover:bg-white/10 border border-white/10 hover:border-white/20" onClick={handleCreateAccount}>
                   <Plus className="mr-3 w-4 h-4" />
                   Create Account
                 </Button>

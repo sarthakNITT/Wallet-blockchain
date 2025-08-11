@@ -8,7 +8,7 @@ type Acc = {
   derivationPath: string;
 };
 
-export const loadWallet = (mnemonics: any, account: number, setWalletAccount: (walletAccount: Acc[]) => void) => {
+export const loadWallet = (mnemonics: any, account: number): Acc[] => {
   const seed = mnemonicToSeedSync(mnemonics)
   const accounts: Acc[] = [];
   let i = 0;
@@ -22,5 +22,5 @@ export const loadWallet = (mnemonics: any, account: number, setWalletAccount: (w
     i = i+1;
     accounts.push({ publicKey: publicSave, derivationPath: path });
   }
-  setWalletAccount(accounts);
+  return accounts;
 }

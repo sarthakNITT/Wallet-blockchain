@@ -4,11 +4,8 @@ import nacl from "tweetnacl"
 import { Keypair } from "@solana/web3.js"
 import { WalletStore } from "@/store";
 
-const count = WalletStore((state) => state.count);
-const setCount = WalletStore((state) => state.setCount);
-const account = WalletStore((state) => state.account);
-const setAccount = WalletStore((state) => state.setAccount);
 export const createAccount = (mnemonics: any) => {
+    const {count, setCount, account, setAccount} = WalletStore.getState();
     setCount(count+1);
     setAccount(account+1);
     const seed = mnemonicToSeedSync(mnemonics) 

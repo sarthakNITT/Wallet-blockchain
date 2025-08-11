@@ -11,13 +11,17 @@ import { WalletStore } from '@/store';
 
 export default function Landing() {
   const [, setLocation] = useLocation();
-  const [seedPhrase, setSeedPhrase] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showKeyModal, setShowKeyModal] = useState(false);
   const [showLoadModal, setShowLoadModal] = useState(false);
-  const [createdWallet, setCreatedWallet] = useState<{ mnemonic: string; address: string; secret: string } | null>(null);
-  const setWalletAccount = WalletStore((state) => state.setWalletAccount);
-  const account = WalletStore((state) => state.account);
+  const seedPhrase = WalletStore(state => state.seedPhrase);
+  const createdWallet = WalletStore(state => state.createdWallet);
+  const account = WalletStore(state => state.account);
+  const setSeedPhrase = WalletStore(state => state.setSeedPhrase);
+  const setCreatedWallet = WalletStore(state => state.setCreatedWallet);
+  const setWalletAccount = WalletStore(state => state.setWalletAccount);
 
+    
   async function handleCreateWallet () {
     try {
       const result = await createWallet();
@@ -26,6 +30,7 @@ export default function Landing() {
         address: result.address,
         secret: result.secret
       });
+      setShowKeyModal(true)
     } catch (error) {
       console.error('Failed to create wallet:', error);
     }
@@ -33,10 +38,16 @@ export default function Landing() {
 
   function handleLoadWallet () {
     try {
-      loadWallet(seedPhrase, account, setWalletAccount);
+      const accounts = loadWallet(seedPhrase, account);
+      if (accounts.length === 0) {
+        alert("No wallet found with these seed words.");
+        return;
+      }
+      setWalletAccount(accounts);
       setLocation('/dashboard');
     } catch (error) {
-      console.error('Failed to load wallet:', error);
+      alert("Invalid seed phrase or unable to derive wallet.");
+      console.error(error);
     }
   }
 
@@ -47,7 +58,7 @@ export default function Landing() {
   const handleContinueToDashboard = (mnemonic: string) => {
     setShowCreateModal(false);
     setCreatedWallet(null);
-    loadWallet(mnemonic, account, setWalletAccount)
+    loadWallet(mnemonic, account)
     setLocation('/dashboard');
   };
 
@@ -152,7 +163,7 @@ export default function Landing() {
               {createdWallet ? 'Wallet Created Successfully!' : 'Create New Wallet'}
             </DialogTitle>
           </DialogHeader>
-          {!createdWallet ? (
+          {!showKeyModal ? (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
               A new wallet will be created with a unique seed phrase. Make sure to save it securely.
@@ -187,7 +198,7 @@ export default function Landing() {
                     <div className="flex justify-between items-center mb-2">
                       <label className="text-sm font-medium text-white">Wallet Address</label>
                       <Button
-                        onClick={() => handleCopyText(createdWallet.address)}
+                        onClick={() => handleCopyText(createdWallet!.address)}
                         variant="ghost"
                         size="sm"
                         className="text-white hover:bg-white/10 p-1"
@@ -197,7 +208,7 @@ export default function Landing() {
                     </div>
                     <div className="bg-white/[0.02] border border-white/10 rounded-lg p-3">
                       <p className="text-sm font-mono text-white break-all">
-                        {createdWallet.address}
+                        {createdWallet!.address}
                       </p>
                     </div>
                   </div>
@@ -206,7 +217,7 @@ export default function Landing() {
                     <div className="flex justify-between items-center mb-2">
                       <label className="text-sm font-medium text-white">Secret <span className='text-red-500'> (do not share it with anyone)</span></label>
                       <Button
-                        onClick={() => handleCopyText(createdWallet.secret)}
+                        onClick={() => handleCopyText(createdWallet!.secret)}
                         variant="ghost"
                         size="sm"
                         className="text-white hover:bg-white/10 p-1"
@@ -216,7 +227,7 @@ export default function Landing() {
                     </div>
                     <div className="bg-white/[0.02] border border-white/10 rounded-lg p-3">
                       <p className="text-sm font-mono text-white break-all">
-                        {createdWallet.secret}
+                        {createdWallet!.secret}
                       </p>
                     </div>
                   </div>
@@ -225,7 +236,7 @@ export default function Landing() {
                     <div className="flex justify-between items-center mb-2">
                       <label className="text-sm font-medium text-white">Seed Phrase (12 words)</label>
                       <Button
-                        onClick={() => handleCopyText(createdWallet.mnemonic)}
+                        onClick={() => handleCopyText(createdWallet!.mnemonic)}
                         variant="ghost"
                         size="sm"
                         className="text-white hover:bg-white/10 p-1"
@@ -235,7 +246,7 @@ export default function Landing() {
                     </div>
                     <div className="bg-white/[0.02] border border-white/10 rounded-lg p-3">
                       <p className="text-sm font-mono text-white break-all">
-                        {createdWallet.mnemonic}
+                        {createdWallet!.mnemonic}
                       </p>
                     </div>
                   </div>
@@ -243,7 +254,7 @@ export default function Landing() {
                 
                 <div className="flex justify-end">
                   <Button 
-                    onClick={()=>handleContinueToDashboard(createdWallet.mnemonic)}
+                    onClick={()=>handleContinueToDashboard(createdWallet!.mnemonic)}
                     className="bg-white text-black hover:bg-white/90"
                     data-testid="button-continue-dashboard"
                   >
