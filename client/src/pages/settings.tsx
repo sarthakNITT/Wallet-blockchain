@@ -3,28 +3,25 @@ import { ArrowLeft, Eye, EyeOff, Copy, Shield, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BackgroundAnimation } from '@/components/ui/background-animation';
 import { useLocation } from 'wouter';
+import { WalletStore } from '@/store';
 
 export default function SettingsMockup() {
   const [showSeedPhrase, setShowSeedPhrase] = useState(false);
   const [, setLocation] = useLocation();
+  const walletAccounts = WalletStore((state) => state.walletAccount);
+  const seedPhrase = WalletStore((state) => state.seedPhrase);
 
-  // Dummy placeholder data
-  const wallet = {
-    accounts: [
-      {
-        publicKey: '0x1234...abcd',
-        derivationPath: "m/44'/60'/0'/0/0"
-      },
-      {
-        publicKey: '0x5678...efgh',
-        derivationPath: "m/44'/60'/0'/0/1"
-      }
-    ],
-    mnemonic: 'word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12'
-  };
+const wallet = {
+  accounts: walletAccounts,
+  mnemonic: seedPhrase
+};
 
   const handleBack = () => {
     setLocation('/dashboard');
+  };
+
+  const handleLogout = () => {
+    setLocation('/');
   };
 
   return (
@@ -67,7 +64,7 @@ export default function SettingsMockup() {
                 </p>
                 
                 <div className="space-y-3">
-                  {wallet.accounts.map((account, index) => (
+                  {walletAccounts.map((account, index) => (
                     <div key={index} className="bg-white/[0.02] border border-white/10 rounded-lg p-4">
                       <div className="flex justify-between items-start mb-2">
                         <span className="text-sm font-medium text-white">Account {index + 1}</span>
@@ -151,6 +148,7 @@ export default function SettingsMockup() {
               <Button 
                 variant="outline"
                 className="w-full justify-center p-3 border-red-500/50 text-red-400 hover:bg-red-500/10 hover:border-red-500"
+                onClick={handleLogout}
               >
                 Log Out
               </Button>

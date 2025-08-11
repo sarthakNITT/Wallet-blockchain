@@ -5,7 +5,7 @@ import { Keypair } from "@solana/web3.js"
 import { WalletStore } from "@/store";
 
 export const createAccount = (mnemonics: any) => {
-    const {count, setCount, account, setAccount} = WalletStore.getState();
+    const { count, setCount, account, setAccount, walletAccount, setWalletAccount } = WalletStore.getState();
     setCount(count+1);
     setAccount(account+1);
     const seed = mnemonicToSeedSync(mnemonics) 
@@ -15,4 +15,5 @@ export const createAccount = (mnemonics: any) => {
     const publicSave = Keypair.fromSecretKey(secret).publicKey.toBase58()
     console.log(mnemonics);
     console.log(publicSave);
+    setWalletAccount([...walletAccount, { publicKey: publicSave, derivationPath: path, balance: "0.00000" }]);
 }

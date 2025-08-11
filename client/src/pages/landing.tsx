@@ -30,6 +30,7 @@ export default function Landing() {
         address: result.address,
         secret: result.secret
       });
+      setSeedPhrase(result.mnemonic);
       setShowKeyModal(true)
     } catch (error) {
       console.error('Failed to create wallet:', error);

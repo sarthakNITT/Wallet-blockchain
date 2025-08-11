@@ -3,7 +3,8 @@ import {create} from "zustand"
 
 type Acc = {
     publicKey: string,
-    derivationPath: string
+    derivationPath: string,
+    balance?: string
 }
 
 type State = {
@@ -13,7 +14,8 @@ type State = {
     walletAccount: Acc[],
     createdWallet: { mnemonic: string; address: string; secret: string } | null,
     seedPhrase: string,
-    balance: string
+    balance: string,
+    mnemonics: string[]
 }
 type Action = {
     setUserPublicKey: (key: string) => void;
@@ -33,6 +35,7 @@ export const WalletStore = create<State & Action>((set)=>({
     createdWallet: null,
     seedPhrase: "",
     balance: "0.00000",
+    mnemonics: [],
     setUserPublicKey: (userPublicKey)=>set(()=>({userPublicKey: userPublicKey})),
     setAccount: (account) => set(() => ({ account: account })),
     setCount: (count) => set(() => ({ count: count })),

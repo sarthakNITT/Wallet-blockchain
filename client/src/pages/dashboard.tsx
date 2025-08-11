@@ -8,6 +8,8 @@ import { BackgroundAnimation } from '@/components/ui/background-animation';
 import { useLocation } from 'wouter';
 import { WalletStore } from '@/store';
 import { showBalance } from '@/helperFunctions/showBalance';
+import { createAccount } from '@/helperFunctions/createAccount';
+import { mnemonicToSeed } from 'bip39';
 
 export default function Dashboard() {
   const [showTokenModal, setShowTokenModal] = useState(false);
@@ -19,7 +21,7 @@ export default function Dashboard() {
   const [showResultModal, setShowResultModal] = useState(false);
   const [tokenDecimals, setTokenDecimals] = useState('9');
   const [, setLocation] = useLocation();
-  let accounts: any[] = [] = WalletStore((state) => state.walletAccount);
+  let accounts: any[] = WalletStore((state) => state.walletAccount);
 
   const handleSettings = () => {
     setLocation('/settings');
@@ -30,8 +32,9 @@ export default function Dashboard() {
   };
 
   const handleCreateAccount = () => {
-      
-  } 
+    const mnemonics = WalletStore.getState().seedPhrase; 
+    createAccount(mnemonics);
+  };  
 
   const handleCheckBalance = async (add: string) => {
     const gotBalance = await showBalance(add, true);
