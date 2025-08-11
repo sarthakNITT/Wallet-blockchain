@@ -1,7 +1,7 @@
 import { WalletStore } from "@/store";
 import axios from "axios";
 
-export const showBalance = async (address: any) => {
+export const showBalance = async (address: any, modal: boolean) => {
   const setBalance = WalletStore.getState().setBalance;
     const alchemyUrl = "https://solana-devnet.g.alchemy.com/v2/T0CLMnl7EO65B9mGepnkXrj8I-uhKFdy";
     try {
@@ -19,7 +19,11 @@ export const showBalance = async (address: any) => {
       )
       const balance = response.data?.result?.value;
       console.log(`Balance of ${address}:`, balance);
-      setBalance(balance)
+      if(modal === false) {
+        setBalance(balance)
+      }else{
+        return balance;
+      }
     } catch (error) {
       console.error(error);
     }

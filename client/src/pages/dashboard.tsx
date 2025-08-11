@@ -15,6 +15,8 @@ export default function Dashboard() {
   const [balanceAddress, setBalanceAddress] = useState('');
   const [tokenName, setTokenName] = useState('');
   const [tokenSymbol, setTokenSymbol] = useState('');
+  const [fetchedBalance, setFetchedBalance] = useState<number | null>(null);
+  const [showResultModal, setShowResultModal] = useState(false);
   const [tokenDecimals, setTokenDecimals] = useState('9');
   const [, setLocation] = useLocation();
   let accounts: any[] = [] = WalletStore((state) => state.walletAccount);
@@ -31,10 +33,17 @@ export default function Dashboard() {
       
   } 
 
+  const handleCheckBalance = async (add: string) => {
+    const gotBalance = await showBalance(add, true);
+    setFetchedBalance(gotBalance! / 1e9);
+    setShowBalanceModal(false); 
+    setShowResultModal(true);
+  };  
+
   useEffect(() => {
     accounts.forEach((acc) => {
       if (acc.publicKey) {
-        showBalance(acc.publicKey);
+        showBalance(acc.publicKey, false);
       }
     });
   }, []);  
@@ -181,8 +190,27 @@ export default function Dashboard() {
               <Button variant="outline" onClick={() => setShowBalanceModal(false)} className="border-white/20 text-white hover:bg-white/5">
                 Close
               </Button>
-              <Button className="bg-white text-black hover:bg-white/90">Check</Button>
+              <Button className="bg-white text-black hover:bg-white/90" onClick={()=>handleCheckBalance(balanceAddress)}>
+                Check
+              </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showResultModal} onOpenChange={setShowResultModal}>
+        <DialogContent
+          className="sm:max-w-md p-4 bg-background border-white/10 m-0 rounded-lg shadow-lg"
+          style={{ transform: "none" }} 
+        >
+          <DialogHeader className="">
+            <DialogTitle className="text-white text-base">Account Balance</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-1">
+            <p className="text-white text-md break-all">{balanceAddress}</p>
+            <Button className="bg-white text-black hover:bg-white/90 right-1">
+              {fetchedBalance} SOL
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
