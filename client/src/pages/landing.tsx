@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useLocation } from 'wouter';
 import { Wallet, Plus, FileText, BarChart3, Shield, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { BackgroundAnimation } from '@/components/ui/background-animation';
 import { createWallet } from '@/helperFunctions/createWallet';
 import { loadWallet } from '@/helperFunctions/loadWallet';
+import { useLocation } from 'wouter';
+import { WalletStore } from '@/store';
 
 export default function Landing() {
   const [, setLocation] = useLocation();
@@ -14,6 +15,8 @@ export default function Landing() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showLoadModal, setShowLoadModal] = useState(false);
   const [createdWallet, setCreatedWallet] = useState<{ mnemonic: string; address: string; secret: string } | null>(null);
+  const setWalletAccount = WalletStore((state) => state.setWalletAccount);
+  const account = WalletStore((state) => state.account);
 
   async function handleCreateWallet () {
     try {
@@ -30,7 +33,7 @@ export default function Landing() {
 
   function handleLoadWallet () {
     try {
-      loadWallet(seedPhrase);
+      loadWallet(seedPhrase, account, setWalletAccount);
       setLocation('/dashboard');
     } catch (error) {
       console.error('Failed to load wallet:', error);
@@ -41,9 +44,10 @@ export default function Landing() {
     navigator.clipboard.writeText(text);
   };
 
-  const handleContinueToDashboard = () => {
+  const handleContinueToDashboard = (mnemonic: string) => {
     setShowCreateModal(false);
     setCreatedWallet(null);
+    loadWallet(mnemonic, account, setWalletAccount)
     setLocation('/dashboard');
   };
 
@@ -239,7 +243,7 @@ export default function Landing() {
                 
                 <div className="flex justify-end">
                   <Button 
-                    onClick={handleContinueToDashboard}
+                    onClick={()=>handleContinueToDashboard(createdWallet.mnemonic)}
                     className="bg-white text-black hover:bg-white/90"
                     data-testid="button-continue-dashboard"
                   >

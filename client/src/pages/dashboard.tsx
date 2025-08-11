@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Settings, Plus, Coins, BarChart3, Wallet, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { BackgroundAnimation } from '@/components/ui/background-animation';
 import { useLocation } from 'wouter';
+import { WalletStore } from '@/store';
 
 export default function Dashboard() {
   const [showTokenModal, setShowTokenModal] = useState(false);
@@ -15,11 +16,7 @@ export default function Dashboard() {
   const [tokenSymbol, setTokenSymbol] = useState('');
   const [tokenDecimals, setTokenDecimals] = useState('9');
   const [, setLocation] = useLocation();
-
-  const accounts = [
-    { accountIndex: 0, publicKey: 'DummyPublicKey1', derivationPath: 'm/44/501/0' },
-    { accountIndex: 1, publicKey: 'DummyPublicKey2', derivationPath: 'm/44/501/1' },
-  ];
+  let accounts: any[] = [] = WalletStore((state) => state.walletAccount);
 
   const handleSettings = () => {
     setLocation('/settings');
